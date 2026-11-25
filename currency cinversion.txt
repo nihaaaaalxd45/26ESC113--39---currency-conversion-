@@ -1,0 +1,165 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_RECORDS 100
+#define CURRENCY_COUNT 6
+
+typedef struct {
+    char code[4];
+    char name[20];
+    double rate;   /* Units of foreign currency for 1 INR */
+} Currency;
+
+typedef struct {
+    int serialNo;
+    double inrAmount;
+    int currencyIndex;
+    double convertedAmount;
+} Conversion;
+
+Currency currencies[CURRENCY_COUNT] = {
+    {"USD", "US Dollar", 0.0120},
+    {"EUR", "Euro", 0.0110},
+    {"GBP", "British Pound", 0.0095},
+    {"AED", "UAE Dirham", 0.0440},
+    {"SAR", "Saudi Riyal", 0.0450},
+    {"JPY", "Japanese Yen", 1.8200}
+};
+
+Conversion history[MAX_RECORDS];
+int historyCount = 0;
+
+void showMenu(void);
+void convertCurrency(void);
+void showRateTable(void);
+void showHistory(void);
+
+int main(void) {
+    int choice;
+
+    do {
+        showMenu();
+        printf("Enter your choice: ");
+
+        if (scanf("%d", &choice) != 1) {
+            printf("\nInvalid input. Please enter a number.\n");
+            return 1;
+        }
+
+        switch (choice) {
+            case 1:
+                convertCurrency();
+                break;
+            case 2:
+                showRateTable();
+                break;
+            case 3:
+                showHistory();
+                break;
+            case 4:
+                printf("\nThank you for using the Currency Converter!\n");
+                break;
+            default:
+                printf("\nInvalid choice. Please select 1 to 4.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
+
+void showMenu(void) {
+    printf("\n====================================\n");
+    printf("       CURRENCY CONVERTER\n");
+    printf("====================================\n");
+    printf("1. Convert INR to another currency\n");
+    printf("2. View fixed exchange-rate table\n");
+    printf("3. View conversion history\n");
+    printf("4. Exit\n");
+    printf("====================================\n");
+}
+
+void convertCurrency(void) {
+    double amount, result;
+    int i, currencyChoice;
+
+    if (historyCount >= MAX_RECORDS) {
+        printf("\nConversion history is full. Cannot save more records.\n");
+        return;
+    }
+
+    printf("\nEnter amount in INR: ");
+    if (scanf("%lf", &amount) != 1 || amount <= 0) {
+        printf("Invalid amount. Enter a positive number.\n");
+        return;
+    }
+
+    printf("\nChoose target currency:\n");
+    for (i = 0; i < CURRENCY_COUNT; i++) {
+        printf("%d. %s (%s)\n", i + 1, currencies[i].name,
+               currencies[i].code);
+    }
+
+    printf("Enter currency choice: ");
+    if (scanf("%d", &currencyChoice) != 1 ||
+        currencyChoice < 1 || currencyChoice > CURRENCY_COUNT) {
+        printf("Invalid currency choice.\n");
+        return;
+    }
+
+    i = currencyChoice - 1;
+    result = amount * currencies[i].rate;
+
+    history[historyCount].serialNo = historyCount + 1;
+    history[historyCount].inrAmount = amount;
+    history[historyCount].currencyIndex = i;
+    history[historyCount].convertedAmount = result;
+    historyCount++;
+
+    printf("\nConversion successful!\n");
+    printf("%.2f INR = %.4f %s (%s)\n", amount, result,
+           currencies[i].code, currencies[i].name);
+    printf("Conversion saved with S.No. %d.\n", historyCount);
+}
+
+void showRateTable(void) {
+    int i;
+
+    printf("\nFIXED EXCHANGE-RATE TABLE\n");
+    printf("--------------------------------------------------\n");
+    printf("%-5s %-20s %s\n", "Code", "Currency", "Rate for 1 INR");
+    printf("--------------------------------------------------\n");
+
+    for (i = 0; i < CURRENCY_COUNT; i++) {
+        printf("%-5s %-20s %.4f\n", currencies[i].code,
+               currencies[i].name, currencies[i].rate);
+    }
+
+    printf("--------------------------------------------------\n");
+    printf("Note: These are illustrative fixed rates for this project.\n");
+}
+
+void showHistory(void) {
+    int i;
+
+    if (historyCount == 0) {
+        printf("\nNo conversions have been made yet.\n");
+        return;
+    }
+
+    printf("\nCONVERSION HISTORY\n");
+    printf("-----------------------------------------------------------------\n");
+    printf("%-6s %-15s %-15s %-15s\n",
+           "S.No.", "INR Amount", "Currency", "Converted Amount");
+    printf("-----------------------------------------------------------------\n");
+
+    for (i = 0; i < historyCount; i++) {
+        int index = history[i].currencyIndex;
+        printf("%-6d %-15.2f %-15s %-15.4f\n",
+               history[i].serialNo,
+               history[i].inrAmount,
+               currencies[index].code,
+               history[i].convertedAmount);
+    }
+
+    printf("-----------------------------------------------------------------\n");
+}
